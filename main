@@ -5,6 +5,45 @@
 //#include <iostream>
 
 
+void xFound(int n, double e, double* x, double* c, double* d)
+{
+    double* x0;
+    double temp=0;
+    int k = 0;
+    x0 = (double*)malloc(n * sizeof(double));
+
+    for(int i=0;i<n;i++) {
+        x[i] = d[i];
+    }
+
+    for(int i=0;i<n*n;i++)
+    {
+        if (i!=i/n)
+            temp = temp + c[i]/c[i/n*(n+1)];
+    }
+    printf("\n\ntemp = %.5f\n", temp);
+
+    for(;;){
+        for(int i=0; i<n; i++)
+        {
+            printf("\nx%d= %.5lf", i+1, x[i]);
+            temp = d[i];
+            for(int j=0; j<n; j++)  temp += c[i*n+j] * x[j];
+            x0[i] = x[i];
+            x[i] = temp;
+        }
+        k = 0;
+        while((fabs(x[k] - x0[k]) < e) && (k < n))   k++;
+        if(k == n) break;
+    }
+
+    printf("\nFinal:");
+    for (int i=0;i<n;i++)
+    {
+        printf("\nx%d= %.5lf", i+1, x[i]);
+    }
+}
+
 void prin(int n, double* c, double* d)
 {
     printf("\nThe matrix:");
@@ -16,7 +55,6 @@ void prin(int n, double* c, double* d)
 
     printf("\n\nThe vector:\n");
     for(int i=0;i<n;i++) printf("%.4f\n", d[i]);
-
 }
 
 int methodMar(int n, const double* a, const double* b, double* c, double* d)
@@ -94,16 +132,15 @@ int methodMax(int n, const double* a, const double* b, double* c, double* d)
         else return 0;
     }
     for(int i=0;i<n;i++) if (c[i*n+i] != 1) return 0;
+
     return 1;
 }
 
 int slau(int n, double e, const double* a, const double* b, double* x)
 {
     double* c;
-    double* x0;
     double* d;
 
-    x0 = (double*)malloc(n * sizeof(double));
     c = (double*)malloc(n * n * sizeof(double));
     d = (double*)malloc(n * sizeof(double));
 
@@ -111,9 +148,13 @@ int slau(int n, double e, const double* a, const double* b, double* x)
 
     if (methodMax(n, a, b, c, d) == 0) return 0;
 
+
     for(int i=0;i<n;i++) c[i*n+i]=0;
+    for(int i=0;i<n*n;i++) c[i]=-c[i];
 
     prin(n, c, d);
+
+    xFound(n, e, x, c, d);
 
     free(c);
     free(d);
@@ -150,7 +191,8 @@ int main()
         }
 
         X = (double*)malloc(n * sizeof(double));
-        slau(n, 1E-5, A, B, X);
+        if (slau(n, 1E-5, A, B, X) == 0) printf("The system cannot be solved using this method.");
+        else printf("\nYaay");
 
         free(A);
         free(B);
