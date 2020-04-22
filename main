@@ -1,0 +1,165 @@
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+//#include <iostream>
+
+
+void prin(int n, double* c, double* d)
+{
+    printf("\nThe matrix:");
+    for(int i=0;i<n*n;i++)
+    {
+        if (i%n==0) printf("\n");
+        printf("%.2f\t", c[i]);
+    }
+
+    printf("\n\nThe vector:\n");
+    for(int i=0;i<n;i++) printf("%.4f\n", d[i]);
+
+}
+
+int methodMar(int n, const double* a, const double* b, double* c, double* d)
+{
+    int* t;
+    t = (int*)malloc(n * sizeof(int));
+    double temp = 0;
+
+    for(int i=0;i<n;i++) t[i] = -1;
+
+    for(int i=0;i<n;i++)
+    {
+        temp = fabs(a[i*n]);
+        for (int j = 0; j < n; j++)
+        {
+            int k = 0;
+            for(int g=0;g<n;g++) if (j != t[g]) k++;
+            if (k == 4)
+            {
+                if (temp < fabs(a[i*n+j]))
+                {
+                    t[i] = j;
+                    temp = fabs(a[i*n+j]);
+                }
+                else if (temp == fabs(a[i*n+j])) t[i] = j;
+            }
+        }
+    }
+
+    for(int i=0;i<n;i++) if (t[i] == -1) return 0;
+
+    for(int i=0;i<n;i++)
+    {
+        for(int j=0;j<n;j++) c[t[i]*n+j]=a[i*n+j]/a[i*n+t[i]];
+        d[i]=b[t[i]]/a[i*n+t[i]];
+    }
+
+    free(t);
+    return 1;
+}
+
+int methodMax(int n, const double* a, const double* b, double* c, double* d)
+{
+    double temp = 0;
+
+    for(int i=0;i<n;i++)
+    {
+        for (int j = 0; j < n; j++) if (fabs(temp) < fabs(a[i*n+j])) temp = a[i*n+j];
+        for (int j = 0; j < n; j++) c[i*n+j] = a[i*n+j]/temp;
+        d[i] = b[i]/temp;
+    }
+
+    for(int i=0;i<n;i++)
+    {
+        int k = 0;
+        for(int j=0;j < n;j++) if (c[j*n+i]==1) k++;
+        if (k >= 1)
+        {
+            for(int j=0;j<n;j++)
+            {
+                if (c[j*n+i]==1)
+                {
+                    for (int g=0;g < n;g++)
+                    {
+                        temp = c[j*n+g];
+                        c[j*n+g]  = c[i*n+g];
+                        c[i*n+g] = temp;
+                    }
+                    temp = d[j];
+                    d[j] = d[i];
+                    d[i] = temp;
+                }
+            }
+        }
+        else return 0;
+    }
+    for(int i=0;i<n;i++) if (c[i*n+i] != 1) return 0;
+    return 1;
+}
+
+int slau(int n, double e, const double* a, const double* b, double* x)
+{
+    double* c;
+    double* x0;
+    double* d;
+
+    x0 = (double*)malloc(n * sizeof(double));
+    c = (double*)malloc(n * n * sizeof(double));
+    d = (double*)malloc(n * sizeof(double));
+
+    //if (methodMar(n, a, b, c, d) == 0) return 0;
+
+    if (methodMax(n, a, b, c, d) == 0) return 0;
+
+    for(int i=0;i<n;i++) c[i*n+i]=0;
+
+    prin(n, c, d);
+
+    free(c);
+    free(d);
+    return 1;
+}
+
+int main()
+{
+    FILE *input_file;
+
+    fopen_s(&input_file, "C:\\Users\\alisa\\source\\repos\\Kursach\\input1.txt", "r");
+
+    if (input_file != NULL)
+    {
+        int n, i, j;
+        fscanf_s(input_file, "%d", &n);
+        double* A, * B, * X;
+        A = (double*)malloc(n * n * sizeof(double));
+        B = (double*)malloc(n * sizeof(double));
+
+        for (i = 0; i < n * n; i++) fscanf_s(input_file, "%lf", &A[i]);
+        for (i = 0; i < n; i++) fscanf_s(input_file, "%lf", &B[i]);
+
+        printf("The system of equations has the form:\n");
+
+        for (i = 0; i < n; i++)
+        {
+            for (j = 0; j < n; j++)
+            {
+                if (A[i * n + j] > 0) printf("+");
+                printf("%.1lf x%d ", A[i * n + j], j);
+            }
+            printf("= %.1lf\n", B[i]);
+        }
+
+        X = (double*)malloc(n * sizeof(double));
+        slau(n, 1E-5, A, B, X);
+
+        free(A);
+        free(B);
+        free(X);
+    }
+    else
+    {
+        printf("File not found.\n");
+    }
+    fclose(input_file);
+    return 0;
+}
