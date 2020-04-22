@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-//#include <iostream>
+
 
 
 void xFound(int n, double e, double* x, double* c, double* d)
